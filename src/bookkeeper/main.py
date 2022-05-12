@@ -1,28 +1,8 @@
 #!/usr/bin/env python
 
-"""
-Usage: bookkeeper [options] DIRECTORY
-
-Reference command-line implementation of a Finnish double-entry bookkeeping
-utility.
-
-Input argument DIRECTORY should contain a directory of text files,
-one for each month, containing entries that contain a transaction number,
-description, and account entries that add up to zero.  The text files should
-be named with the template "YYYY-MM.txt", "YYYY" for the year and "MM" for
-the month.
-
-Output is written to directory "output".
-
-Options:
-  --help                  Output this help.
-  --output-directory=DIR  Write output files to directory DIR.
-                          [default: output]
-"""
 # TODO: eventually this system should allow inserting these records to a
 # web-backend.
 import sys
-import docopt
 import click
 import os.path
 import os

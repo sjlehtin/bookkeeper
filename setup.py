@@ -26,7 +26,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
-    install_requires=["click", "docopt", "lark-parser"],
+    install_requires=["click", "lark-parser"],
     extras_require={
         'dev': ["pytest", "tox", "tox-pyenv", "wheel"],
     },
