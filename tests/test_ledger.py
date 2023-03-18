@@ -26,28 +26,8 @@ def test_ledger():
     assert len(main.transactions) == 0
 
 
-def test_ledger_with_entity():
-    def_string = """Entity "Semeai Oy" {
-        CurrentFiscalYear 2017-01-01 2017-12-31;
-      IncomeStatement {
-        Title "TULOSLASKELMA JA TASE";
-    Group "Liikevaihto" {
-      Account "3000" "Osto";
-      Account "3001" "Myynti";
-      }
-      SummaryLine "Foofaafom";
-      }
-      Assets {        
-        Title "VASTAAVAA";
-        SummaryLine "pakko oli laittaa";
-      }
-      Liabilities {
-        Title "VASTATTAVAA";
-        SummaryLine "pakko oli laittaa";
-      }
-      }
-      """
-    entity = defparser.parse(io.StringIO(def_string))
+def test_ledger_with_entity(simple_ledger_def):
+    entity = defparser.parse(io.StringIO(simple_ledger_def))
     txs = txparser.parse(io.StringIO("""0 20180301 foo
   3000 -100.00
   3001 100.00  Zappadai zupaduu

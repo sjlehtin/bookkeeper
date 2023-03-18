@@ -88,6 +88,7 @@ class Profit:
         self._balance = None
 
     def sum(self):
+        assert self._balance is not None, "Balance not set for Profit"
         return self._balance
 
     def set(self, balance):
@@ -117,6 +118,7 @@ class Entity:
     def add_transactions(self, transactions):
         if not transactions:
             # empty transaction list is ok.
+            self._set_profit()
             return
 
         ll = sorted(transactions, key=lambda tr: tr.id)

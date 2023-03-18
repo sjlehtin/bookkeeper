@@ -2,14 +2,14 @@
 
 # TODO: eventually this system should allow inserting these records to a
 # web-backend.
-import sys
 import click
 import os.path
+import pathlib
 import os
 import re
-from . import txparser
-from . import defparser
-from . import ledger
+from bookkeeper import txparser
+from bookkeeper import defparser
+from bookkeeper import ledger
 
 
 def output_general_ledger(ledger, output):
@@ -118,22 +118,32 @@ def main(directory, output_directory):
     """
 
     transactions = []
-    with os.scandir(directory) as it:
-        for entry in it:
-            if entry.is_file() and re.match("(data-)?[0-9]+-[0-9]+(\.txt)?$",
-                                            entry.name):
-                try:
-                    transactions.extend(txparser.parse(open(entry.path)))
-                except txparser.InvalidInputError as e:
-                    if e.transaction_id is not None:
-                        tx = f"TX {e.transaction_id}: "
-                    raise click.ClickException(f"{entry.path}:{e.line}[{e.column}]:{tx} {str(e)}") from None
+    input_files = list(
+        filter(lambda ent: re.match("(data-)?[0-9]+-[0-9]+(\.txt)?$",
+                                    ent.name),
+               [entry for entry in pathlib.Path(directory).iterdir()
+                if entry.is_file()]))
+
+    if not input_files:
+        raise click.ClickException("No input files found in current working "
+                                   "directory.")
+
+    print(f"Reading transactions from {len(input_files)} files...")
+
+    for entry in input_files:
+        try:
+            transactions.extend(txparser.parse(open(entry.path)))
+        except txparser.InvalidInputError as e:
+            if e.transaction_id is not None:
+                tx = f"TX {e.transaction_id}: "
+            raise click.ClickException(f"{entry.path}:{e.line}[{e.column}]:{tx} {str(e)}") from None
 
     defs_path = os.path.join(directory, "ledger-defs.txt")
     if os.path.exists(defs_path):
         entity = defparser.parse(open(defs_path))
         entity.add_transactions(transactions)
     else:
+        print("No ledger-defs.txt, deducing from transactions...")
         entity = ledger.Entity.create_from_transactions(transactions)
 
     output_directory = os.path.realpath(output_directory)
