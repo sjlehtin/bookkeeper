@@ -132,11 +132,11 @@ def main(directory, output_directory):
 
     for entry in input_files:
         try:
-            transactions.extend(txparser.parse(open(entry.path)))
+            transactions.extend(txparser.parse(open(entry)))
         except txparser.InvalidInputError as e:
             if e.transaction_id is not None:
                 tx = f"TX {e.transaction_id}: "
-            raise click.ClickException(f"{entry.path}:{e.line}[{e.column}]:{tx} {str(e)}") from None
+            raise click.ClickException(f"{entry}:{e.line}[{e.column}]:{tx} {str(e)}") from None
 
     defs_path = os.path.join(directory, "ledger-defs.txt")
     if os.path.exists(defs_path):
