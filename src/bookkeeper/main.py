@@ -136,6 +136,8 @@ def main(directory, output_directory):
         except txparser.InvalidInputError as e:
             if e.transaction_id is not None:
                 tx = f"TX {e.transaction_id}: "
+            else:
+                tx = ""
             raise click.ClickException(f"{entry}:{e.line}[{e.column}]:{tx} {str(e)}") from None
 
     defs_path = os.path.join(directory, "ledger-defs.txt")
