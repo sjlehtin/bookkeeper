@@ -18,7 +18,7 @@ def output_general_ledger(ledger, output):
         if not account.entries:
             continue
 
-        print(f"{account.number:4} {account.name}", file=output)
+        print("{:4} {}".format(account.number,account.name), file=output)
         cumulative = 0
         for entry in account.entries:
             cumulative += entry.change
@@ -27,15 +27,12 @@ def output_general_ledger(ledger, output):
             if len(description) > 39:
                 description = description[:36] + "..."
 
-            print(f"{entry.transaction.id:>6}"
-                  f" {description:39}"
-                  f" {entry.transaction.date}"
-                  f" {entry.change:>10,}"
-                  f" {cumulative:>10,}",
-                  file=output)
+            print("{:>6} {:39} {} {:>10,} {:>10,}".
+                      format(entry.transaction.id,description,entry.transaction.date,entry.change,cumulative),
+                      file=output)
         sep = "========="
-        print(f"{sep:>79}", file=output)
-        print(f"{account.balance:>79,}", file=output)
+        print("{:>79}".format(sep), file=output)
+        print("{:>79,}".format(account.balance), file=output)
 
 
 def output_statement(entity, output):
@@ -47,7 +44,7 @@ def output_statement(entity, output):
         indent = given_indent if given_indent > 0 else 0
         ind = " " * 2 * indent
 
-        print(f"{ind}{block.title}", file=out)
+        print("{}{}".format(ind,block.title), file=out)
 
         name_width = width - 2 * indent - 1 - 10 - 12
         summary_width = width - 2 * indent - 1 - 10
@@ -62,25 +59,21 @@ def output_statement(entity, output):
                             change_sign=change_sign)
             elif isinstance(member, ledger.SummaryLine):
                 print(
-                    f"{ind}{member.summary:{summary_width}} "
-                    f"{multiplier * acc:>10,}",
+                    "{}{:{}} {:>10,}".format(ind,member.summary,summary_width,multiplier * acc),
                     file=out)
             else:
                 assert (isinstance(member, ledger.Account) or
                         isinstance(member, ledger.Profit)), \
-                    f"Unexcepted type, got {type(member)}"
+                    "Unexcepted type, got {}".format(type(member))
                 if member.sum() != 0:
                     print(
-                        f"{ind}  {member.description():{name_width}} "
-                        f"{multiplier * member.sum():>10,}",
+                        "{}  {:{}} {:>10,}".format(ind,member.description(),name_width,multiplier * member.sum(),),
                         file=out)
         print(
-            f"{ind}{block.summary:{summary_width}} "
-            f"{multiplier * block.sum():>10,}",
+            "{}{:{}} {:>10,}".format(ind,block.summary,summary_width,multiplier * block.sum()),
             file=out)
 
-    print(f"{entity.name}   {entity.fiscal_year_start} - "
-          f"{entity.fiscal_year_end}\n", file=output)
+    print("{}   {} - {}\n".format(entity.name,entity.fiscal_year_start,entity.fiscal_year_end), file=output)
     print_block(entity.income_statement, output, width=78, indent=-1,
                 change_sign=True)
     print("\n\f", file=output)
@@ -92,10 +85,10 @@ def output_statement(entity, output):
 
 def output_journal(entity, output):
     for tx in entity.transactions:
-        print(f"{tx.id} {tx.date:%Y%m%d} {tx.description}", file=output)
+        print("{} {:%Y%m%d} {}".format(tx.id,tx.date,tx.description), file=output)
         for entry in tx.entries:
             print(
-                f"  {entry.account} {entry.change} {entry.description or ''}",
+                "  {} {} {}".format(entry.account,entry.change,entry.description or ''),
                 file=output)
         print(file=output)
 
@@ -128,17 +121,17 @@ def main(directory, output_directory):
         raise click.ClickException("No input files found in current working "
                                    "directory.")
 
-    print(f"Reading transactions from {len(input_files)} files...")
+    print("Reading transactions from {} files...".format(len(input_files)))
 
     for entry in input_files:
         try:
             transactions.extend(txparser.parse(open(entry)))
         except txparser.InvalidInputError as e:
             if e.transaction_id is not None:
-                tx = f"TX {e.transaction_id}: "
+                tx = "TX {}: ".format(e.transaction_id)
             else:
                 tx = ""
-            raise click.ClickException(f"{entry}:{e.line}[{e.column}]:{tx} {str(e)}") from None
+            raise click.ClickException("{}:{}[{}]:{} {}".format(entry,e.line,e.column,tx,str(e))) from None
 
     defs_path = os.path.join(directory, "ledger-defs.txt")
     if os.path.exists(defs_path):
@@ -149,7 +142,7 @@ def main(directory, output_directory):
         entity = ledger.Entity.create_from_transactions(transactions)
 
     output_directory = os.path.realpath(output_directory)
-    print(f"Writing output to {output_directory}...")
+    print("Writing output to {}...".format(output_directory))
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
