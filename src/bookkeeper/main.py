@@ -12,6 +12,36 @@ from bookkeeper import defparser
 from bookkeeper import ledger
 
 
+trspace = ''.maketrans('.,',', ')
+trpoint = ''.maketrans('.,',',.')
+
+def dformat_point(value):
+    return '{:>,}'.format(value).translate(trpoint)
+
+def dformat_comma(value):
+    return '{:>,}'.format(value)
+
+def dformat_space(value):
+    return '{:>,}'.format(value).translate(trspace)
+
+def dformat_plain(value):
+    return str(value)
+
+dformats = {
+    'plain': dformat_plain,
+    'space': dformat_space,
+    'comma': dformat_comma,
+    'point': dformat_point,
+    }
+
+dformat = dformat_plain
+
+def set_numeric_format(numeric_format):
+    global dformat
+    dformat = dformats.get(numeric_format)
+    if not dformat:
+        raise Exception('Illegal numeric format "{}"'.format(numeric_format))
+
 def output_general_ledger(ledger, output):
     for account in sorted(ledger.accounts.values(),
                           key=lambda acc: acc.number):
@@ -27,12 +57,12 @@ def output_general_ledger(ledger, output):
             if len(description) > 39:
                 description = description[:36] + "..."
 
-            print("{:>6} {:39} {} {:>10,} {:>10,}".
-                      format(entry.transaction.id,description,entry.transaction.date,entry.change,cumulative),
+            print("{:>6} {:39} {} {:>10} {:>10}".
+                      format(entry.transaction.id,description,entry.transaction.date,dformat(entry.change),dformat(cumulative)),
                       file=output)
         sep = "========="
         print("{:>79}".format(sep), file=output)
-        print("{:>79,}".format(account.balance), file=output)
+        print("{:>79}".format(dformat(account.balance)), file=output)
 
 
 def output_statement(entity, output):
@@ -59,7 +89,7 @@ def output_statement(entity, output):
                             change_sign=change_sign)
             elif isinstance(member, ledger.SummaryLine):
                 print(
-                    "{}{:{}} {:>10,}".format(ind,member.summary,summary_width,multiplier * acc),
+                    "{}{:{}} {:>10}".format(ind,member.summary,summary_width,dformat(multiplier * acc)),
                     file=out)
             else:
                 assert (isinstance(member, ledger.Account) or
@@ -67,10 +97,10 @@ def output_statement(entity, output):
                     "Unexcepted type, got {}".format(type(member))
                 if member.sum() != 0:
                     print(
-                        "{}  {:{}} {:>10,}".format(ind,member.description(),name_width,multiplier * member.sum(),),
+                        "{}  {:{}} {:>10}".format(ind,member.description(),name_width,dformat(multiplier * member.sum()),),
                         file=out)
         print(
-            "{}{:{}} {:>10,}".format(ind,block.summary,summary_width,multiplier * block.sum()),
+            "{}{:{}} {:>10}".format(ind,block.summary,summary_width,dformat(multiplier * block.sum())),
             file=out)
 
     print("{}   {} - {}\n".format(entity.name,entity.fiscal_year_start,entity.fiscal_year_end), file=output)
@@ -96,7 +126,8 @@ def output_journal(entity, output):
 @click.command()
 @click.argument('DIRECTORY', type=click.Path(dir_okay=True, file_okay=False))
 @click.option('--output-directory', default="output", type=click.Path(dir_okay=True, file_okay=False, writable=True))
-def main(directory, output_directory):
+@click.option('--numeric-format', default="plain")
+def main(directory, output_directory, numeric_format):
     """
     Reference command-line implementation of a Finnish double-entry
     bookkeeping utility.
@@ -109,6 +140,8 @@ def main(directory, output_directory):
 
     Output is written to directory "output" by default.
     """
+
+    set_numeric_format(numeric_format)
 
     transactions = []
     input_files = list(
