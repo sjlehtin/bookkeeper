@@ -35,14 +35,17 @@ dformats = {
     }
 
 dformat = dformat_plain
+numeric_width_ = 10
 
-def set_numeric_format(numeric_format):
-    global dformat
+def set_numeric_format(numeric_format,numeric_width):
+    global dformat,numeric_width_
+    numeric_width_ = numeric_width
     dformat = dformats.get(numeric_format)
     if not dformat:
         raise Exception('Illegal numeric format "{}"'.format(numeric_format))
 
 def output_general_ledger(ledger, output):
+    nwidth = numeric_width_
     for account in sorted(ledger.accounts.values(),
                           key=lambda acc: acc.number):
         if not account.entries:
@@ -57,15 +60,16 @@ def output_general_ledger(ledger, output):
             if len(description) > 39:
                 description = description[:36] + "..."
 
-            print("{:>6} {:39} {} {:>10} {:>10}".
-                      format(entry.transaction.id,description,entry.transaction.date,dformat(entry.change),dformat(cumulative)),
+            print("{:>6} {:39} {} {:>{}} {:>{}}".
+                      format(entry.transaction.id,description,entry.transaction.date,dformat(entry.change),nwidth,dformat(cumulative),nwidth),
                       file=output)
-        sep = "========="
-        print("{:>79}".format(sep), file=output)
-        print("{:>79}".format(dformat(account.balance)), file=output)
+        sep = "=" * nwidth
+        print("{:>58}{:>{}}".format('',sep,nwidth*2+1), file=output)
+        print("{:>58}{:>{}}".format('',dformat(account.balance),nwidth*2+1), file=output)
 
 
 def output_statement(entity, output):
+    nwidth = numeric_width_
     def print_block(block, out, indent=0, width=68, change_sign=False):
         if block.sum() == 0:
             return
@@ -89,7 +93,7 @@ def output_statement(entity, output):
                             change_sign=change_sign)
             elif isinstance(member, ledger.SummaryLine):
                 print(
-                    "{}{:{}} {:>10}".format(ind,member.summary,summary_width,dformat(multiplier * acc)),
+                    "{}{:{}} {:>{}}".format(ind,member.summary,summary_width,dformat(multiplier * acc),nwidth),
                     file=out)
             else:
                 assert (isinstance(member, ledger.Account) or
@@ -97,10 +101,10 @@ def output_statement(entity, output):
                     "Unexcepted type, got {}".format(type(member))
                 if member.sum() != 0:
                     print(
-                        "{}  {:{}} {:>10}".format(ind,member.description(),name_width,dformat(multiplier * member.sum()),),
+                        "{}  {:{}} {:>{}}".format(ind,member.description(),name_width,dformat(multiplier * member.sum()),nwidth),
                         file=out)
         print(
-            "{}{:{}} {:>10}".format(ind,block.summary,summary_width,dformat(multiplier * block.sum())),
+            "{}{:{}} {:>{}}".format(ind,block.summary,summary_width,dformat(multiplier * block.sum()),nwidth),
             file=out)
 
     print("{}   {} - {}\n".format(entity.name,entity.fiscal_year_start,entity.fiscal_year_end), file=output)
@@ -114,11 +118,12 @@ def output_statement(entity, output):
 
 
 def output_journal(entity, output):
+    nwidth = numeric_width_
     for tx in entity.transactions:
-        print("{} {:%Y%m%d} {}".format(tx.id,tx.date,tx.description), file=output)
+        print("{:<4} {:%Y%m%d} {}".format(tx.id,tx.date,tx.description), file=output)
         for entry in tx.entries:
             print(
-                "  {} {} {}".format(entry.account,entry.change,entry.description or ''),
+                "  {} {:>{}} {}".format(entry.account,entry.change,nwidth,entry.description or ''),
                 file=output)
         print(file=output)
 
@@ -127,7 +132,8 @@ def output_journal(entity, output):
 @click.argument('DIRECTORY', type=click.Path(dir_okay=True, file_okay=False))
 @click.option('--output-directory', default="output", type=click.Path(dir_okay=True, file_okay=False, writable=True))
 @click.option('--numeric-format', default="plain")
-def main(directory, output_directory, numeric_format):
+@click.option('--numeric-width', type=click.IntRange(min=10,max=20),default=10)
+def main(directory, output_directory, numeric_format,numeric_width):
     """
     Reference command-line implementation of a Finnish double-entry
     bookkeeping utility.
@@ -141,7 +147,8 @@ def main(directory, output_directory, numeric_format):
     Output is written to directory "output" by default.
     """
 
-    set_numeric_format(numeric_format)
+    set_numeric_format(numeric_format,numeric_width)
+    print('Numeric width = {}\n'.format(numeric_width))
 
     transactions = []
     input_files = list(
