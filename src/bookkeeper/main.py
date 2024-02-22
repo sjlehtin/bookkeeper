@@ -112,7 +112,8 @@ def output_statement(entity, output):
                 change_sign=True)
     print("\n\f", file=output)
     print_block(entity.assets, output, width=78, indent=-1)
-    print("\n\f", file=output)
+    print("\n", file=output)
+    # print("\f", file=output)
     print_block(entity.liabilities, output, width=78, indent=-1,
                 change_sign=True)
 
