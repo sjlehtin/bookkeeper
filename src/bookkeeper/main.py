@@ -12,13 +12,46 @@ from bookkeeper import defparser
 from bookkeeper import ledger
 
 
+trspace = ''.maketrans('.,',', ')
+trpoint = ''.maketrans('.,',',.')
+
+def dformat_point(value):
+    return '{:>,}'.format(value).translate(trpoint)
+
+def dformat_comma(value):
+    return '{:>,}'.format(value)
+
+def dformat_space(value):
+    return '{:>,}'.format(value).translate(trspace)
+
+def dformat_plain(value):
+    return str(value)
+
+dformats = {
+    'plain': dformat_plain,
+    'space': dformat_space,
+    'comma': dformat_comma,
+    'point': dformat_point,
+    }
+
+dformat = dformat_plain
+numeric_width_ = 10
+
+def set_numeric_format(numeric_format,numeric_width):
+    global dformat,numeric_width_
+    numeric_width_ = numeric_width
+    dformat = dformats.get(numeric_format)
+    if not dformat:
+        raise Exception('Illegal numeric format "{}"'.format(numeric_format))
+
 def output_general_ledger(ledger, output):
+    nwidth = numeric_width_
     for account in sorted(ledger.accounts.values(),
                           key=lambda acc: acc.number):
         if not account.entries:
             continue
 
-        print(f"{account.number:4} {account.name}", file=output)
+        print("{:4} {}".format(account.number,account.name), file=output)
         cumulative = 0
         for entry in account.entries:
             cumulative += entry.change
@@ -27,18 +60,16 @@ def output_general_ledger(ledger, output):
             if len(description) > 39:
                 description = description[:36] + "..."
 
-            print(f"{entry.transaction.id:>6}"
-                  f" {description:39}"
-                  f" {entry.transaction.date}"
-                  f" {entry.change:>10,}"
-                  f" {cumulative:>10,}",
-                  file=output)
-        sep = "========="
-        print(f"{sep:>79}", file=output)
-        print(f"{account.balance:>79,}", file=output)
+            print("{:>6} {:39} {} {:>{}} {:>{}}".
+                      format(entry.transaction.id,description,entry.transaction.date,dformat(entry.change),nwidth,dformat(cumulative),nwidth),
+                      file=output)
+        sep = "=" * nwidth
+        print("{:>58}{:>{}}".format('',sep,nwidth*2+1), file=output)
+        print("{:>58}{:>{}}".format('',dformat(account.balance),nwidth*2+1), file=output)
 
 
 def output_statement(entity, output):
+    nwidth = numeric_width_
     def print_block(block, out, indent=0, width=68, change_sign=False):
         if block.sum() == 0:
             return
@@ -47,7 +78,7 @@ def output_statement(entity, output):
         indent = given_indent if given_indent > 0 else 0
         ind = " " * 2 * indent
 
-        print(f"{ind}{block.title}", file=out)
+        print("{}{}".format(ind,block.title), file=out)
 
         name_width = width - 2 * indent - 1 - 10 - 12
         summary_width = width - 2 * indent - 1 - 10
@@ -62,40 +93,38 @@ def output_statement(entity, output):
                             change_sign=change_sign)
             elif isinstance(member, ledger.SummaryLine):
                 print(
-                    f"{ind}{member.summary:{summary_width}} "
-                    f"{multiplier * acc:>10,}",
+                    "{}{:{}} {:>{}}".format(ind,member.summary,summary_width,dformat(multiplier * acc),nwidth),
                     file=out)
             else:
                 assert (isinstance(member, ledger.Account) or
                         isinstance(member, ledger.Profit)), \
-                    f"Unexcepted type, got {type(member)}"
+                    "Unexcepted type, got {}".format(type(member))
                 if member.sum() != 0:
                     print(
-                        f"{ind}  {member.description():{name_width}} "
-                        f"{multiplier * member.sum():>10,}",
+                        "{}  {:{}} {:>{}}".format(ind,member.description(),name_width,dformat(multiplier * member.sum()),nwidth),
                         file=out)
         print(
-            f"{ind}{block.summary:{summary_width}} "
-            f"{multiplier * block.sum():>10,}",
+            "{}{:{}} {:>{}}".format(ind,block.summary,summary_width,dformat(multiplier * block.sum()),nwidth),
             file=out)
 
-    print(f"{entity.name}   {entity.fiscal_year_start} - "
-          f"{entity.fiscal_year_end}\n", file=output)
+    print("{}   {} - {}\n".format(entity.name,entity.fiscal_year_start,entity.fiscal_year_end), file=output)
     print_block(entity.income_statement, output, width=78, indent=-1,
                 change_sign=True)
     print("\n\f", file=output)
     print_block(entity.assets, output, width=78, indent=-1)
-    print("\n\f", file=output)
+    print("\n", file=output)
+    # print("\f", file=output)
     print_block(entity.liabilities, output, width=78, indent=-1,
                 change_sign=True)
 
 
 def output_journal(entity, output):
+    nwidth = numeric_width_
     for tx in entity.transactions:
-        print(f"{tx.id} {tx.date:%Y%m%d} {tx.description}", file=output)
+        print("{:<4} {:%Y%m%d} {}".format(tx.id,tx.date,tx.description), file=output)
         for entry in tx.entries:
             print(
-                f"  {entry.account} {entry.change} {entry.description or ''}",
+                "  {} {:>{}} {}".format(entry.account,entry.change,nwidth,entry.description or ''),
                 file=output)
         print(file=output)
 
@@ -103,7 +132,9 @@ def output_journal(entity, output):
 @click.command()
 @click.argument('DIRECTORY', type=click.Path(dir_okay=True, file_okay=False))
 @click.option('--output-directory', default="output", type=click.Path(dir_okay=True, file_okay=False, writable=True))
-def main(directory, output_directory):
+@click.option('--numeric-format', default="plain")
+@click.option('--numeric-width', type=click.IntRange(min=10,max=20),default=10)
+def main(directory, output_directory, numeric_format,numeric_width):
     """
     Reference command-line implementation of a Finnish double-entry
     bookkeeping utility.
@@ -117,6 +148,9 @@ def main(directory, output_directory):
     Output is written to directory "output" by default.
     """
 
+    set_numeric_format(numeric_format,numeric_width)
+    print('Numeric width = {}\n'.format(numeric_width))
+
     transactions = []
     input_files = list(
         filter(lambda ent: re.match("(data-)?[0-9]+-[0-9]+(\.txt)?$",
@@ -128,15 +162,17 @@ def main(directory, output_directory):
         raise click.ClickException("No input files found in current working "
                                    "directory.")
 
-    print(f"Reading transactions from {len(input_files)} files...")
+    print("Reading transactions from {} files...".format(len(input_files)))
 
     for entry in input_files:
         try:
-            transactions.extend(txparser.parse(open(entry.path)))
+            transactions.extend(txparser.parse(open(entry)))
         except txparser.InvalidInputError as e:
             if e.transaction_id is not None:
-                tx = f"TX {e.transaction_id}: "
-            raise click.ClickException(f"{entry.path}:{e.line}[{e.column}]:{tx} {str(e)}") from None
+                tx = "TX {}: ".format(e.transaction_id)
+            else:
+                tx = ""
+            raise click.ClickException("{}:{}[{}]:{} {}".format(entry,e.line,e.column,tx,str(e))) from None
 
     defs_path = os.path.join(directory, "ledger-defs.txt")
     if os.path.exists(defs_path):
@@ -147,7 +183,7 @@ def main(directory, output_directory):
         entity = ledger.Entity.create_from_transactions(transactions)
 
     output_directory = os.path.realpath(output_directory)
-    print(f"Writing output to {output_directory}...")
+    print("Writing output to {}...".format(output_directory))
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
