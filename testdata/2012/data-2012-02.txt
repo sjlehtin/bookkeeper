@@ -1,10 +1,10 @@
 0 20120203 Ei avaavaa tasetta, yhtiö perustettu
 
-1 20120203 Osakepääoma/Lehtinen
+1 20120203 Osakepääoma/Perustaja 1
   1910 1250.00
   2001 -1250.00
 
-2 20120203 Osakepääoma/Nygren
+2 20120203 Osakepääoma/Perustaja 2
   1910 1250.00
   2001 -1250.00
 
@@ -12,26 +12,4 @@
   8764 350.00
   1910 -350.00
 
-4 20120125 R-Kioski prepaid-liittymä
-  8500 5.90
-  2942 -5.90
-
-5 20120203 Heikintori pysäköinti
-  7850 1.63
-  1760 0.37
-  2941 -2.00
-
-6 20120212 Gigantti MacBook Air
-  1160 1016.26
-  1760 233.74
-  2941 -1250.00
-
-7 20120217 Itella kirjekuoret
-  8620 3.39
-  1760 0.78
-  2942 -4.17
-
-8 20120229 Alv-valvontailmoitus 2/2012
-  1760 -234.89
-  1763 234.89
 

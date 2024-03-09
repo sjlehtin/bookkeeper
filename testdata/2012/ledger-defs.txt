@@ -1,4 +1,4 @@
-Entity "Semeai Oy" {
+Entity "Yritys Oy" {
   /* ReportingCurrency EUR; */
 
   /* FiscalYear 2013-01-01 2013-12-31; */
@@ -6,7 +6,6 @@ Entity "Semeai Oy" {
   CurrentFiscalYear 2015-01-01 2015-12-31;
 
   /* DefaultUnit "yleis" "Kohdistamattomat"; */
-/*  Unit "j9esi" "TEKES J9 esitutkimusvaihe"; */
 
   IncomeStatement {
     Title "TULOSLASKELMA JA TASE";
@@ -211,17 +210,8 @@ Entity "Semeai Oy" {
 	Account "1248" "Konttorikoneet ja kalusto" /*{ */
 	  /* depreciate declining_balance 25% "6870"; } */;
       }
-      Group "Sijoitukset" {
-	/* Account "1453" "Portalify Oy"; */
-	/* Account "1454" "AO SSH (Tectia) (käyttöomaisuus)"; */
-      }
     }
     Group "Vaihtuvat vastaavat" {
-      Group "Vaihto-omaisuus" {
-      	/* Account "1543" "AO SSH Communications Security Oyj"; */
-	/* Account "1544" "Kirjat (Vaihto-omaisuus)"; */
-	/* Account "1599" "Muu vaihto-omaisuus"; */
-      }
       Group "Saamiset" {
 	Group "Pitkäaikaiset saamiset" {
 	   Account "1659" "Pitkäaik. muut lainasaamiset";
@@ -246,9 +236,7 @@ Entity "Semeai Oy" {
       }
       Group "Rahat ja pankkisaamiset" {
 	/* Account "1900" "Käteisvarat"; */
-	Account "1910" "OP 578010-224637";
-	/* Account "1930" "OP 578041-60906423 (XXX nyt 1767)"; */
-	/* Account "1940" "OP 579445-20003923"; */
+	Account "1910" "Pankkitili";
       }
     }
     SummaryLine "VASTAAVAA YHTEENSÄ";
@@ -273,7 +261,6 @@ Entity "Semeai Oy" {
 	/* Account "2602" "Pitkäaikainen pääomalaina 2010-10-29"; */
 	/* Account "2603" "Pitkäaikainen pääomalaina 2011-07-29"; */
 	/* Account "2604" "Pitkäaikainen pääomalaina 2012-08-24"; */
-	/* Account "2630" "Pitkäaikainen laina Ylönen"; */
 	/* Account "2690" "Muut pitkäaikaiset velat"; */
 	/*Account "2770" "Pitkäaikaiset laskennalliset verovelat";*/
       }
@@ -288,8 +275,8 @@ Entity "Semeai Oy" {
 	  Account "2935" "Kuluvan kuukauden myynnin maksettava 9% alv";
 	  Account "2936" "Kuluvan kuukauden myynnin maksettava 23% alv";
 	  Account "2939" "Arvonlisäverovelka";
-	  Account "2941" "Velka Lehtinen Sami";
-	  Account "2942" "Velka Nygren Daniela";
+	  Account "2941" "Velka Perustaja 1";
+	  Account "2942" "Velka Perustaja 2";
 	  /* Account "2948" "Eurocard-velka"; */
 	  Account "2949" "Muut lyhytaikaiset velat";
 	}
