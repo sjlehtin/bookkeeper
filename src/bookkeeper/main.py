@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# TODO: eventually this system should allow inserting these records to a
-# web-backend.
 import click
 import os.path
 import pathlib
