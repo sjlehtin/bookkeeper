@@ -125,18 +125,20 @@ def main(directory, output_directory):
                 if entry.is_file()]))
 
     if not input_files:
-        raise click.ClickException("No input files found in current working "
-                                   "directory.")
+        raise click.ClickException(f"No input files found in {directory}.")
 
-    print(f"Reading transactions from {len(input_files)} files...")
+    num_files = len(input_files)
+    print(f"Reading transactions from {num_files} file{'s' if num_files != 1 else ''}...")
 
     for entry in input_files:
         try:
-            transactions.extend(txparser.parse(open(entry.path)))
+            transactions.extend(txparser.parse(open(entry)))
         except txparser.InvalidInputError as e:
             if e.transaction_id is not None:
                 tx = f"TX {e.transaction_id}: "
-            raise click.ClickException(f"{entry.path}:{e.line}[{e.column}]:{tx} {str(e)}") from None
+            else:
+                tx = ""
+            raise click.ClickException(f"{entry}: line {e.line}, col {e.column}:{tx} {str(e)}") from None
 
     defs_path = os.path.join(directory, "ledger-defs.txt")
     if os.path.exists(defs_path):
@@ -147,7 +149,6 @@ def main(directory, output_directory):
         entity = ledger.Entity.create_from_transactions(transactions)
 
     output_directory = os.path.realpath(output_directory)
-    print(f"Writing output to {output_directory}...")
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
@@ -163,6 +164,8 @@ def main(directory, output_directory):
     output_journal(entity,
                    open(os.path.join(output_directory,
                                      "journal.txt"), "w"))
+
+    print(f"Output left in directory {output_directory}.")
 
 
 if __name__ == "__main__":
