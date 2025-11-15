@@ -9,7 +9,7 @@ authors = [
 ]
 description = "Utility for small-scale Finnish double-ledger bookkeeping"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -19,10 +19,10 @@ dependencies = [
     "click",
     "lark-parser"
 ]
-version = "0.9.0"
+version = "0.10.0"
 
 [project.optional-dependencies]
-dev = ["pytest", "tox", "build", ]
+dev = ["pytest", "tox", "build", "tox-uv"]
 
 [project.scripts]
 bookkeeper = "bookkeeper.main:main"
