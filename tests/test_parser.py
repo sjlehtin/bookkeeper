@@ -72,3 +72,56 @@ def test_invalid_date():
           45 -100.00\t
           65 100.00
         """))
+
+
+def test_line_comment():
+    txs = txparser.parse(io.StringIO("""// this is a comment
+1 20180330 foo
+          45 -100.00\t
+          65 100.00
+        """))
+    assert len(txs[0].entries) == 2, "Slash-slash comment should be ok."
+
+
+def test_block_comment():
+    txs = txparser.parse(io.StringIO("""/* this is a comment */
+1 20180330 foo
+              45 -100.00\t
+              65 100.00
+            """))
+    assert len(txs[0].entries) == 2, "Slash-star comment should be ok."
+
+    txs = txparser.parse(io.StringIO("""/* this is a 
+    foo
+        
+    comment */
+1 20180330 foo
+          45 -100.00\t
+          65 100.00
+        """))
+    assert len(txs[0].entries) == 2, "Slash-star block-comment should be ok."
+
+    txs = txparser.parse(io.StringIO("""
+1 20180330 foo
+/* this is a 
+    foo
+
+    comment */
+          45 -100.00\t
+          65 100.00
+        """))
+    assert len(txs[0].entries) == 2, "Slash-star block-comment should be ok."
+    assert len(txs) == 1, "Block-comment should be ignored in the middle of transaction"
+
+    txs = txparser.parse(io.StringIO("""
+1 20180330 foo
+              45 -100.00\t
+    /* 34 22 foo
+       74 -22 bar */
+              65 100.00
+            """))
+    assert len(txs[0].entries) == 2, "Slash-star block-comment should be ok."
+    assert len(
+        txs) == 1, "Block-comment should be ignored in the middle of transaction"
+    assert txs[0].entries[0].account == 45, "Block-comment should be ignored"
+    assert txs[0].entries[1].account == 65, "Block-comment should be ignored"

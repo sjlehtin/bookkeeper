@@ -3,6 +3,7 @@ import datetime
 from decimal import Decimal
 from .ledger import Transaction, Entry, InvalidInputError
 
+#
 grammar = r"""
 start: transaction*
 
@@ -14,7 +15,12 @@ _ALLWS: WS
 _WS: WS_INLINE
 _NL: NEWLINE
 
-transaction: ID _WS+ date _WS+ DESCRIPTION _NL entry* _ALLWS?
+BLOCK_COMMENT : "/*" /(.|\n)*?/ "*/"
+COMMENT :  BLOCK_COMMENT | BLOCK_COMMENT "\n" | "//" /.*\n/
+
+%ignore COMMENT 
+
+transaction: _NL? ID _WS+ date _WS+ DESCRIPTION _NL entry* _ALLWS?
 
 %import common.INT -> NUMBER
 %import common.DIGIT
