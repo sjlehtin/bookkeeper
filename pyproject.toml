@@ -3,13 +3,14 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bookkeeper"
+name = "pybookkeeper"
 authors = [
     {name = "Sami J. Lehtinen", email = "sjl+bookkeeper@iki.fi"},
 ]
 description = "Utility for small-scale Finnish double-ledger bookkeeping"
 readme = "README.md"
 requires-python = ">=3.10"
+urls.repository = "https://github.com/sjlehtin/bookkeeper.git"
 
 classifiers = [
     "Programming Language :: Python :: 3",
