@@ -1,0 +1,6 @@
+.tox
+build
+dist
+output
+.idea
+src/pybookkeeper.egg-info
